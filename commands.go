@@ -9,11 +9,10 @@ import (
 
 
 var AfterId = -20
-var ptr *int = &AfterId
 
 var urls = map[string]string{
 	"Next": "https://pokeapi.co/api/v2/location-area/?limit=20&offset=",
-	"Previous": fmt.Sprintf("https://pokeapi.co/api/v2/location-area/?limit=20&offset=%d", *ptr),
+	"Previous": "https://pokeapi.co/api/v2/location-area/?limit=20&offset=",
 }
 
 var commandRegistry = map[string]commandCli {
@@ -89,12 +88,12 @@ func commandMap() error {
 
 	url_ := "https://pokeapi.co/api/v2/location-area/?limit=20&offset="
 	urls["Next"] = url_ + fmt.Sprintf("%d", AfterId)
-
-	/*
-	PRINTING TO ENSURE CORRECTNESS:
-	fmt.Printf("AFTER ID: %d\n", AfterId)
-	fmt.Printf("URL: %s\n\n", urls["Next"])
-	*/
+	if AfterId == 0 {
+		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId)
+	} else {
+		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId-20)
+	}
+	
 	url := fmt.Sprint(urls["Next"])
 
 	res, err := http.Get(url)
@@ -103,9 +102,6 @@ func commandMap() error {
 		return err
 	}
 	defer res.Body.Close()
-
-	// data, err := io.ReadAll(res.Body)
-	// fmt.Print(string(data))
 
 	var locations commandMapStruct
 	decoder := json.NewDecoder(res.Body)
@@ -129,10 +125,6 @@ func commandMapb() error {
 	}
 
 	err := commandMap()
-	
-	if AfterId == 40 {
-		AfterId = 20
-	}
 
 	return err
 }
