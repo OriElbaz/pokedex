@@ -13,12 +13,17 @@ var commandRegistry = map[string]commandCli {
 		description: "exists program",
 		callback: commandExit,
 	},
-	"help" : {
+	"help" : {},
+}
+
+// init function to avoid circular problem with commandRegistry and commandHelp (looping registry)
+func init() {
+	commandRegistry["help"] = commandCli{
 		name: "help",
 		description: "shows users commands",
 		callback: commandHelp,
-	},
-	}
+		}
+}
 
 
 func main() {
@@ -39,12 +44,10 @@ func main() {
 		} else {
 			fmt.Print("Unkown command\n")
 		}
-		
-		
 
 	}
-}
 
+}
 
 
 type commandCli struct {
@@ -61,8 +64,8 @@ func commandExit() error {
 }
 
 func commandHelp() error {
-	fmt.Print("Welcome to the Pokedex!")
-	fmt.Print("Usage:")
+	fmt.Print("Welcome to the Pokedex!\n")
+	fmt.Print("Usage:\n\n")
 
 	for key, command := range commandRegistry {
 		fmt.Printf("%s: %s\n", key, command.description)
