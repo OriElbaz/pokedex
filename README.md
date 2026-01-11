@@ -1,7 +1,7 @@
 # PokéDex CLI
 
 A CLI mini-pokemon game I built during [Boot.dev](https://boot.dev)'s Golang course. This is my first project in Go, so it was really about getting quicker with the language and familiar with http requests in Go. 
-Highlight for me was learning caching with automatic reaping using goroutines and channels,
+Highlight for me was learning caching with automatic reaping using goroutines and channels.
 
 Now I'll hand the mic to Gemini....
 
@@ -61,9 +61,3 @@ Once the program is running, you can use the following commands:
 
 * `help`: Displays the manual and all available commands.
 * `exit`: Safely closes the Pokedex program.
-
----
-
----
-
-**Next Step:** Would you like me to help you write a `main.go` loop that handles the user input and executes these commands efficiently?
