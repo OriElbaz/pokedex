@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -145,19 +144,9 @@ func commandHelp(none string) error {
 func commandMap(none string) error {
 	AfterId += 20
 
-	url_ := "https://pokeapi.co/api/v2/location-area/?limit=20&offset="
-	urls["Next"] = url_ + fmt.Sprintf("%d", AfterId)
-	if AfterId == 0 {
-		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId)
-	} else {
-		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId-20)
-	}
-	
-	urlToUse := fmt.Sprint(urls["Next"])
-	data := []byte{}
-
-	entry, ok := cache.Get(urlToUse); 
-	// fmt.Printf("***** USED CACHE: %v\n", ok)
+	urlToUse := updateUrlsInMap()
+	var locations commandMapStruct
+	data, ok := cache.Get(urlToUse); 
 
 	if !ok {
 
@@ -180,18 +169,11 @@ func commandMap(none string) error {
 		}
 
 		cache.Add(urlToUse, data)
-		// fmt.Printf("***** CACHED: %v\n", urlToUse)
-
-	} else {
-		data = entry
 	}
 
-	decodeBody := bytes.NewReader(data)
-
-	var locations commandMapStruct
-	decoder := json.NewDecoder(decodeBody)
-	if err := decoder.Decode(&locations); err != nil {
-		fmt.Printf("Error with DECODING: %v\n", err)
+	err := json.Unmarshal(data, &locations)
+	if err != nil {
+		fmt.Printf("Error with UNMARSHAL: %v\n", err)
 		return err
 	}
 
@@ -270,4 +252,15 @@ func init() {
 		callback: commandHelp,
 		config: &urls,
 		}
+}
+
+func updateUrlsInMap() string {
+	url_ := "https://pokeapi.co/api/v2/location-area/?limit=20&offset="
+	urls["Next"] = url_ + fmt.Sprintf("%d", AfterId)
+	if AfterId == 0 {
+		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId)
+	} else {
+		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId-20)
+	}
+	return fmt.Sprint(urls["Next"])
 }
