@@ -1,14 +1,20 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/OriElbaz/pokedex/internal/pokecache"
 )
 
 
 var AfterId = -20
+var cache = *pokecache.NewCache(30 * time.Second)
 
 var urls = map[string]string{
 	"Next": "https://pokeapi.co/api/v2/location-area/?limit=20&offset=",
@@ -46,6 +52,7 @@ func init() {
 		config: &urls,
 		}
 }
+
 
 type commandMapStruct struct {
 	Count    int    `json:"count"`
@@ -94,26 +101,47 @@ func commandMap() error {
 		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId-20)
 	}
 	
-	url := fmt.Sprint(urls["Next"])
+	urlToUse := fmt.Sprint(urls["Next"])
+	data := []byte{}
 
-	res, err := http.Get(url)
-	if err != nil {
-		fmt.Printf("Error: %v", err)
-		return err
+	entry, ok := cache.Get(urlToUse); 
+	// fmt.Printf("***** USED CACHE: %v\n", ok)
+
+	if !ok {
+
+		res, err := http.Get(urlToUse)
+		if err != nil {
+			fmt.Printf("Error with GET: %v\n", err)
+			return err
+		}
+		defer res.Body.Close()
+
+		data, err = io.ReadAll(res.Body)
+		if err != nil {
+			fmt.Printf("Error with READALL: %v\n", err)
+			return err
+		}
+
+		cache.Add(urlToUse, data)
+		// fmt.Printf("***** CACHED: %v\n", urlToUse)
+
+	} else {
+		data = entry
 	}
-	defer res.Body.Close()
+
+	decodeBody := bytes.NewReader(data)
 
 	var locations commandMapStruct
-	decoder := json.NewDecoder(res.Body)
+	decoder := json.NewDecoder(decodeBody)
 	if err := decoder.Decode(&locations); err != nil {
-		fmt.Printf("Error: %v", err)
+		fmt.Printf("Error with DECODING: %v\n", err)
 		return err
 	}
 
 	for _, location := range locations.Results {
 		fmt.Printf("%s\n", location.Name)
 	}
-
+	
 	return nil
 }
 

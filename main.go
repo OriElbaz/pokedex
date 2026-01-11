@@ -9,7 +9,7 @@ import (
 
 func main() {
 	scanner := bufio.NewScanner(os.Stdin)
-
+	
 	for i := 0; ; i++ {
 		fmt.Print("Pokedex > ")
 

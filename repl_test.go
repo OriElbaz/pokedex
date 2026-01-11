@@ -8,6 +8,8 @@ import (
 
 
 func TestCleanInput(t *testing.T) {
+	fmt.Println("=== CleanInput() ===")
+
 	tests := []struct {
 		name 		string
 		input 		string
@@ -23,8 +25,10 @@ func TestCleanInput(t *testing.T) {
 		if !reflect.DeepEqual(got, test.expected) {
 			t.Errorf("Test: %s, Expected: %s, Got: %s", test.name, test.expected, got)
 		} else {
-			fmt.Printf("Passed test: %s, Expected: %s, Got: %s\n", test.name, test.expected, got)
+			fmt.Printf("Passed test: '%s'\n", test.input)
 		}
 
 	}
+
+	fmt.Print("====================\n\n")
 }
