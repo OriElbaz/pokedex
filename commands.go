@@ -241,29 +241,20 @@ func explore(location string) error {
 		}
 
 		// cache data //
-		byteData, err := io.ReadAll(res.Body)
+		data, err = io.ReadAll(res.Body)
 		if err != nil {
 			fmt.Printf("Error with READALL: %v\n", err)
 			return err
 		}
-		cache.Add(url, byteData)
-
-		// convert to struct //
-		err = json.Unmarshal(byteData, &pokemons)
-		if err != nil {
-			fmt.Printf("Error with GET: %v\n", err)
-			return err
-		}
-
-	} else {
-		// convert byte into struct //
-		err := json.Unmarshal(data, &pokemons)
-		if err != nil {
-			fmt.Printf("Error with UNMARSHAL: %v\n", err)
-			return err
-		}
+		cache.Add(url, data)
 	}
-	
+
+	// convert byte into struct //
+	err := json.Unmarshal(data, &pokemons)
+	if err != nil {
+		fmt.Printf("Error with UNMARSHAL: %v\n", err)
+		return err
+	}
 
 	for _, pokemon := range pokemons.PokemonEncounters {
 		fmt.Println(pokemon.Pokemon.Name)
