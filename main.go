@@ -18,10 +18,18 @@ func main() {
 		
 		cleanedInput := cleanInput(input)
 		command := strings.ToLower(cleanedInput[0])
+		
+
+		commandInput := ""
+		
+		if len(cleanedInput) > 1 {
+			commandInput = cleanedInput[1]	
+		}
+
 
 		c, err := commandRegistry[command]
 		if err == true {
-			c.callback()
+			c.callback(commandInput)
 		} else {
 			fmt.Print("Unkown command\n")
 		}
