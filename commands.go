@@ -1,12 +1,14 @@
 package main
 
 import (
+	"math/rand"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
 	"github.com/OriElbaz/pokedex/internal/pokecache"
 )
 
@@ -14,6 +16,8 @@ import (
 var AfterId = -20
 
 var cache = *pokecache.NewCache(30 * time.Second)
+
+var pokedex = make(map[string]Pokemon)
 
 var urls = map[string]string{
 	"Next": "https://pokeapi.co/api/v2/location-area/?limit=20&offset=",
@@ -43,7 +47,13 @@ var commandRegistry = map[string]commandCli {
 	"explore" : {
 		name: "explore",
 		description: "shows pokemon in area",
-		callback: explore,
+		callback: commandExplore,
+		config: &urls,
+	},
+	"catch" : {
+		name: "catch",
+		description: "attempt to catch a pokemon",
+		callback: commandCatch,
 		config: &urls,
 	},
 }
@@ -122,6 +132,30 @@ type pokemonInLocation struct {
 	} `json:"pokemon_encounters"`
 }
 
+type Pokemon struct {
+	ID             int    `json:"id"`
+	Name           string `json:"name"`
+	BaseExperience int    `json:"base_experience"`
+	Height         int    `json:"height"`
+	Weight         int    `json:"weight"`
+	Stats []struct {
+		BaseStat int `json:"base_stat"`
+		Effort   int `json:"effort"`
+		Stat     struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"stat"`
+	} `json:"stats"`
+	Types []struct {
+		Slot int `json:"slot"`
+		Type struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"type"`
+	} `json:"types"`
+}
+
+
 /*** COMMAND CALLBACK FUNCTIONS ***/
 
 func commandExit(none string) error {
@@ -196,7 +230,7 @@ func commandMapb(none string) error {
 	return err
 }
 
-func explore(location string) error {
+func commandExplore(location string) error {
 	
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", location)
 	var pokemons pokemonInLocation
@@ -239,6 +273,50 @@ func explore(location string) error {
 	return nil
 }
 
+func commandCatch(pokemonInput string) error {
+	url := "https://pokeapi.co/api/v2/pokemon/" + pokemonInput
+	var pokemon Pokemon
+
+	res, err := http.Get(url)
+	if err != nil {
+		fmt.Printf("Error with GET: %v\n", err)
+		return err
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		fmt.Printf("Unexpected status code: %d", res.StatusCode)
+		return nil
+	}
+
+	// read into bytes //
+	pokemonData, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Printf("Error with READALL: %v\n", err)
+		return err
+	}
+
+	// convert byte into struct //
+	err = json.Unmarshal(pokemonData, &pokemon)
+	if err != nil {
+		fmt.Printf("Error with UNMARSHAL: %v\n", err)
+		return err
+	}
+	
+	fmt.Printf("Throwing a Pokeball at %s...\n", pokemon.Name)
+	if !catchChance(pokemon.BaseExperience) {
+		fmt.Printf("%s escaped!\n", pokemon.Name)
+		return nil
+	}
+
+	fmt.Printf("%s was caught!\n", pokemon.Name)
+	pokedex[pokemon.Name] = pokemon
+	
+	
+	return nil
+
+}
+
 /*** HELPER FUNCTIONS ***/
 func init() {
 	/* 
@@ -263,4 +341,13 @@ func updateUrlsInMap() string {
 		urls["Previous"] = url_ + fmt.Sprintf("%d", AfterId-20)
 	}
 	return fmt.Sprint(urls["Next"])
+}
+
+func catchChance(baseExperience int) bool {
+	chance := 100.0 - (float64(baseExperience) - 30.0) * (90.0 / 578.0)
+	if rand.Float64() < chance {
+		return true
+	}
+	return false
+
 }
