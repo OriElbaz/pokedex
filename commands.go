@@ -1,10 +1,10 @@
 package main
 
 import (
-	"math/rand"
 	"encoding/json"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"os"
 	"time"
@@ -54,6 +54,18 @@ var commandRegistry = map[string]commandCli {
 		name: "catch",
 		description: "attempt to catch a pokemon",
 		callback: commandCatch,
+		config: &urls,
+	},
+	"inspect" : {
+		name: "inspect",
+		description: "shows a pokemon's, you've caught, stats",
+		callback: commandInspect,
+		config: &urls,
+	},
+	"pokedex" : {
+		name: "pokedex",
+		description: "shows all pokemon in your pokedex",
+		callback: commandPokedex,
 		config: &urls,
 	},
 }
@@ -317,6 +329,26 @@ func commandCatch(pokemonInput string) error {
 
 }
 
+func commandInspect(pokemonInput string) error {
+	pokemon, err := pokedex[pokemonInput]
+	if err == false {
+		fmt.Printf("you have not caught that pokemon\n")
+		return nil
+	}
+
+	printStats(pokemon)
+
+	return nil
+}
+
+func commandPokedex(none string) error {
+	fmt.Println("Your Pokedex:")
+	for _, pokemon := range pokedex {
+		fmt.Printf("- %s\n", pokemon.Name)
+	}
+	return nil
+}
+
 /*** HELPER FUNCTIONS ***/
 func init() {
 	/* 
@@ -350,4 +382,21 @@ func catchChance(baseExperience int) bool {
 	}
 	return false
 
+}
+
+func printStats(pokemon Pokemon) {
+	fmt.Printf("Name: %s\n", pokemon.Name)
+	fmt.Printf("Height: %d\n", pokemon.Height)
+	fmt.Printf("Weight: %d\n", pokemon.Weight)
+	fmt.Printf("Stats:\n")
+	for _, stat := range pokemon.Stats {
+		name := stat.Stat.Name
+		num := stat.BaseStat
+		fmt.Printf(" - %s: %d\n", name, num)
+	}
+	fmt.Printf("Types:\n")
+	for _, t := range pokemon.Types {
+		typeName := t.Type.Name
+		fmt.Printf(" - %s\n", typeName)
+	}
 }
