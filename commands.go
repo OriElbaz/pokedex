@@ -11,8 +11,9 @@ import (
 	"github.com/OriElbaz/pokedex/internal/pokecache"
 )
 
-
+/*** VARIABLES ***/
 var AfterId = -20
+
 var cache = *pokecache.NewCache(30 * time.Second)
 
 var urls = map[string]string{
@@ -48,17 +49,10 @@ var commandRegistry = map[string]commandCli {
 	},
 }
 
-// init function to avoid circular problem with commandRegistry and commandHelp (looping registry)
-func init() {
-	commandRegistry["help"] = commandCli{
-		name: "help",
-		description: "shows users commands",
-		callback: commandHelp,
-		config: &urls,
-		}
-}
 
 
+/*** COMMAND STRUCTS ***/
+// map
 type commandMapStruct struct {
 	Count    int    `json:"count"`
 	Next     string `json:"next"`
@@ -68,15 +62,68 @@ type commandMapStruct struct {
 		URL  string `json:"url"`
 	} `json:"results"`
 }
-
+// all
 type commandCli struct {
 	name string
 	description string
 	callback func(string) error
 	config *map[string]string
 }
+// explore
+type pokemonInLocation struct {
+	EncounterMethodRates []struct {
+		EncounterMethod struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"encounter_method"`
+		VersionDetails []struct {
+			Rate    int `json:"rate"`
+			Version struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"version"`
+		} `json:"version_details"`
+	} `json:"encounter_method_rates"`
+	GameIndex int `json:"game_index"`
+	ID        int `json:"id"`
+	Location  struct {
+		Name string `json:"name"`
+		URL  string `json:"url"`
+	} `json:"location"`
+	Name  string `json:"name"`
+	Names []struct {
+		Language struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"language"`
+		Name string `json:"name"`
+	} `json:"names"`
+	PokemonEncounters []struct {
+		Pokemon struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		} `json:"pokemon"`
+		VersionDetails []struct {
+			EncounterDetails []struct {
+				Chance          int   `json:"chance"`
+				ConditionValues []any `json:"condition_values"`
+				MaxLevel        int   `json:"max_level"`
+				Method          struct {
+					Name string `json:"name"`
+					URL  string `json:"url"`
+				} `json:"method"`
+				MinLevel int `json:"min_level"`
+			} `json:"encounter_details"`
+			MaxChance int `json:"max_chance"`
+			Version   struct {
+				Name string `json:"name"`
+				URL  string `json:"url"`
+			} `json:"version"`
+		} `json:"version_details"`
+	} `json:"pokemon_encounters"`
+}
 
-// COMMAND CALLBACK FUNCTIONS
+/*** COMMAND CALLBACK FUNCTIONS ***/
 
 func commandExit(none string) error {
 	fmt.Print("Closing the Pokedex... Goodbye!\n")
@@ -167,59 +214,6 @@ func commandMapb(none string) error {
 	return err
 }
 
-type pokemonInLocation struct {
-	EncounterMethodRates []struct {
-		EncounterMethod struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"encounter_method"`
-		VersionDetails []struct {
-			Rate    int `json:"rate"`
-			Version struct {
-				Name string `json:"name"`
-				URL  string `json:"url"`
-			} `json:"version"`
-		} `json:"version_details"`
-	} `json:"encounter_method_rates"`
-	GameIndex int `json:"game_index"`
-	ID        int `json:"id"`
-	Location  struct {
-		Name string `json:"name"`
-		URL  string `json:"url"`
-	} `json:"location"`
-	Name  string `json:"name"`
-	Names []struct {
-		Language struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"language"`
-		Name string `json:"name"`
-	} `json:"names"`
-	PokemonEncounters []struct {
-		Pokemon struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		} `json:"pokemon"`
-		VersionDetails []struct {
-			EncounterDetails []struct {
-				Chance          int   `json:"chance"`
-				ConditionValues []any `json:"condition_values"`
-				MaxLevel        int   `json:"max_level"`
-				Method          struct {
-					Name string `json:"name"`
-					URL  string `json:"url"`
-				} `json:"method"`
-				MinLevel int `json:"min_level"`
-			} `json:"encounter_details"`
-			MaxChance int `json:"max_chance"`
-			Version   struct {
-				Name string `json:"name"`
-				URL  string `json:"url"`
-			} `json:"version"`
-		} `json:"version_details"`
-	} `json:"pokemon_encounters"`
-}
-
 func explore(location string) error {
 	
 	url := fmt.Sprintf("https://pokeapi.co/api/v2/location-area/%s", location)
@@ -261,4 +255,19 @@ func explore(location string) error {
 	}
 
 	return nil
+}
+
+/*** HELPER FUNCTIONS ***/
+func init() {
+	/* 
+	Function is used to add the 'help' commandCli into commandRegistry after commandRegistry is instantiated.
+	This stops circular reliance on each other.
+	*/
+
+	commandRegistry["help"] = commandCli{
+		name: "help",
+		description: "shows users commands",
+		callback: commandHelp,
+		config: &urls,
+		}
 }
