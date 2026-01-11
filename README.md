@@ -9,7 +9,6 @@ Some Features:
 * **Real-time Data:** Integration with the [PokéAPI](https://pokeapi.co/) to fetch locations and Pokémon stats.
 * **Custom In-Memory Cache:** A high-performance cache implementation to reduce API latency and minimize network requests.
 * **Automatic Cache Reaping:** Background goroutines automatically clean up stale cache entries after a configurable duration.
-* **Catch Mechanics:** A custom linear probability formula that calculates your catch success rate based on a Pokémon's `Base Experience`.
 * **Interactive REPL:** A smooth command-line interface with a dedicated command registry.
 
 ---
